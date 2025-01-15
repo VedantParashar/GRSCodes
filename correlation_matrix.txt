@@ -1,0 +1,18 @@
+import pandas as pd
+
+# Load the Excel file
+df = pd.read_excel(r'C:\Users\vedan\Desktop\final_dax.xlsx')
+
+# Check the first few rows to ensure it's loaded correctly
+print(df.head())
+
+# Select only the relevant columns (numeric variables)
+correlation_matrix = df[['Cost of Equity', 'Fog Index', 'Log of Total Assets', 'Debt-to-Equity Ratio', 'ROA']].corr()
+
+# Display the correlation matrix
+print(correlation_matrix)
+
+# Save the correlation matrix to an Excel file
+correlation_matrix.to_excel(r'C:\Users\vedan\Desktop\correlation_matrix.xlsx')
+
+print("Correlation matrix has been saved to 'correlation_matrix.xlsx'.")

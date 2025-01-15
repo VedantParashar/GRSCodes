@@ -1,0 +1,64 @@
+import yfinance as yf
+import pandas as pd
+import os
+
+# List of DAX company tickers
+tickers = [
+    "ADS.DE", "AIR.PA", "ALV.DE", "BAS.DE", "BAYN.DE", "BEI.DE", "BMW.DE", "BNR.DE",
+    "CBK.DE", "CON.DE", "1COV.DE", "DTG.DE", "DBK.DE", "DB1.DE", "DHL.DE", "DTE.DE",
+    "EOAN.DE", "FRE.DE", "HNR1.DE", "HEI.DE", "HEN3.DE", "IFX.DE", "MBG.DE", "MRK.DE",
+    "MTX.DE", "MUV2.DE", "P911.DE", "PAH3.DE", "QIA.DE", "RHM.DE", "RWE.DE", "SAP.DE",
+    "SRT3.DE", "SIE.DE", "ENR.DE", "SHL.DE", "SY1.DE", "VOW3.DE", "VNA.DE", "ZAL.DE"
+]
+
+# Function to fetch Total Debt and Total Equity Gross Minority Interest for each year
+def fetch_balance_sheet_data(ticker):
+    try:
+        stock = yf.Ticker(ticker)
+        # Fetch the balance sheet data for the last few years
+        balance_sheet = stock.balance_sheet
+        
+        # Extract the annual data (columns will have the dates like '12/31/2021')
+        years = balance_sheet.columns
+        
+        # Initialize a dictionary to store the data
+        data = {"Ticker": ticker}
+        
+        # Extract required data for each year (2021, 2022, 2023)
+        for year in years:
+            if year in ['2021-12-31', '2022-12-31', '2023-12-31']:  # Only for 2021, 2022, 2023
+                total_debt = balance_sheet.loc["Total Debt", year] if "Total Debt" in balance_sheet.index else None
+                total_equity = balance_sheet.loc["Total Equity Gross Minority Interest", year] if "Total Equity Gross Minority Interest" in balance_sheet.index else None
+                
+                # Convert to millions (if not None)
+                if total_debt is not None:
+                    total_debt = total_debt / 1_000_000
+                if total_equity is not None:
+                    total_equity = total_equity / 1_000_000
+                
+                # Add the data for each year to the dictionary
+                data[f"{year} Total Debt (in millions)"] = total_debt
+                data[f"{year} Total Equity (in millions)"] = total_equity
+        
+        return data
+    
+    except Exception as e:
+        return {"Ticker": ticker, "Error": str(e)}
+
+# Fetch data for all tickers
+results = []
+for ticker in tickers:
+    print(f"Fetching balance sheet data for {ticker}...")
+    data = fetch_balance_sheet_data(ticker)
+    results.append(data)
+
+# Convert results to a DataFrame
+df = pd.DataFrame(results)
+
+# Define the path to save the file on Desktop
+desktop_path = os.path.join(os.path.expanduser("~"), "Desktop")
+output_file = os.path.join(desktop_path, "DAX_Companies_Balance_Sheet_2021_2023_Million.xlsx")
+
+# Save results to Excel
+df.to_excel(output_file, index=False)
+print(f"Data saved to {output_file}")

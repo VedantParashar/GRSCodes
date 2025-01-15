@@ -1,0 +1,62 @@
+import yfinance as yf
+import pandas as pd
+import os
+
+# List of DAX company tickers
+tickers = [
+    "ADS.DE", "AIR.PA", "ALV.DE", "BAS.DE", "BAYN.DE", "BEI.DE", "BMW.DE", "BNR.DE",
+    "CBK.DE", "CON.DE", "1COV.DE", "DTG.DE", "DBK.DE", "DB1.DE", "DHL.DE", "DTE.DE",
+    "EOAN.DE", "FRE.DE", "HNR1.DE", "HEI.DE", "HEN3.DE", "IFX.DE", "MBG.DE", "MRK.DE",
+    "MTX.DE", "MUV2.DE", "P911.DE", "PAH3.DE", "QIA.DE", "RHM.DE", "RWE.DE", "SAP.DE",
+    "SRT3.DE", "SIE.DE", "ENR.DE", "SHL.DE", "SY1.DE", "VOW3.DE", "VNA.DE", "ZAL.DE"
+]
+
+# Initialize an empty list to store the results
+results = []
+
+# Loop through each ticker to fetch net income data for the years 2021, 2022, and 2023
+for ticker in tickers:
+    try:
+        # Fetch the stock data
+        stock = yf.Ticker(ticker)
+        
+        # Retrieve the income statement data
+        income_statement = stock.financials
+        
+        # Check if 'Net Income' is present in the index
+        if 'Net Income' in income_statement.index:
+            # Extract the net income data for 2023, 2022, and 2021
+            net_income = income_statement.loc['Net Income']
+            
+            # Get the values for 12/31/2023, 12/31/2022, and 12/31/2021 if they exist
+            net_income_2023 = net_income.get('12/31/2023', 'Data not available')
+            net_income_2022 = net_income.get('12/31/2022', 'Data not available')
+            net_income_2021 = net_income.get('12/31/2021', 'Data not available')
+            
+            # Append the data to the results list
+            results.append({
+                'Ticker': ticker,
+                'Net Income 2023': net_income_2023,
+                'Net Income 2022': net_income_2022,
+                'Net Income 2021': net_income_2021
+            })
+        else:
+            # Append a message indicating data is not available
+            results.append({'Ticker': ticker, 'Net Income 2023': 'Data not available', 
+                             'Net Income 2022': 'Data not available', 'Net Income 2021': 'Data not available'})
+    except Exception as e:
+        # Append a message indicating an error occurred
+        results.append({'Ticker': ticker, 'Net Income 2023': f'Error: {e}', 
+                         'Net Income 2022': f'Error: {e}', 'Net Income 2021': f'Error: {e}'})
+
+# Convert the results list to a DataFrame
+df = pd.DataFrame(results)
+
+# Define the path to save the file on Desktop
+desktop_path = os.path.join(os.path.expanduser("~"), "Desktop")
+output_file = os.path.join(desktop_path, "DAX_Companies_Net_Income_2021_2023.xlsx")
+
+# Save the DataFrame to an Excel file
+df.to_excel(output_file, index=False)
+
+print(f"Data saved to {output_file}")

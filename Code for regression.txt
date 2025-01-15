@@ -1,0 +1,42 @@
+import pandas as pd
+import statsmodels.api as sm
+
+# Correct file path
+file_path = r"C:\Users\vedan\Desktop\Dax_Reg.xlsx"
+sheet_name = 'Final'
+
+# Load the Excel file and read the "Final" sheet
+data = pd.read_excel(file_path, sheet_name=sheet_name)
+
+# Define variables (use exact column names from the dataset)
+dependent_variable = 'Cost of Equity'
+independent_variable = 'Fog Index'
+control_variables = ['ROA', 'Log of Total Assets', 'Debt-to-Equity Ratio']
+
+# Create the design matrix (independent variables + control variables)
+X = data[[independent_variable] + control_variables]
+X = sm.add_constant(X)  # Adds a constant term to the model
+
+# Define the dependent variable
+y = data[dependent_variable]
+
+# Build the regression model
+model = sm.OLS(y, X).fit()
+
+# Extract regression results
+results_summary = model.summary()
+print(results_summary)
+
+# Save key results to a DataFrame
+results_df = pd.DataFrame({
+    'Coefficient': model.params,
+    'P-Value': model.pvalues,
+    'Standard Error': model.bse
+})
+
+# Save results to a new Excel file
+output_file_path = r"C:\Users\vedan\Desktop\Regression_Results.xlsx"
+with pd.ExcelWriter(output_file_path) as writer:
+    results_df.to_excel(writer, sheet_name='Regression Results')
+
+print(f"Results have been saved to {output_file_path}")

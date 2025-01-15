@@ -1,0 +1,52 @@
+import yfinance as yf
+import pandas as pd
+import os
+
+# List of DAX company tickers
+tickers = [
+    "ADS.DE", "AIR.PA", "ALV.DE", "BAS.DE", "BAYN.DE", "BEI.DE", "BMW.DE", "BNR.DE",
+    "CBK.DE", "CON.DE", "1COV.DE", "DTG.DE", "DBK.DE", "DB1.DE", "DHL.DE", "DTE.DE",
+    "EOAN.DE", "FRE.DE", "HNR1.DE", "HEI.DE", "HEN3.DE", "IFX.DE", "MBG.DE", "MRK.DE",
+    "MTX.DE", "MUV2.DE", "P911.DE", "PAH3.DE", "QIA.DE", "RHM.DE", "RWE.DE", "SAP.DE",
+    "SRT3.DE", "SIE.DE", "ENR.DE", "SHL.DE", "SY1.DE", "VOW3.DE", "VNA.DE", "ZAL.DE"
+]
+
+# Function to fetch Total Assets for each year
+def fetch_total_assets(ticker):
+    try:
+        # Fetch the ticker data
+        stock = yf.Ticker(ticker)
+        balance_sheet = stock.balance_sheet
+        
+        # Extract data for Total Assets
+        years = ['2023', '2022', '2021', '2020']
+        data = {"Ticker": ticker}
+        
+        for year in years:
+            if year in balance_sheet.columns:
+                total_assets = balance_sheet.loc["Total Assets", year]
+                # Extract the numeric value from the Series
+                data[year] = total_assets.values[0] if isinstance(total_assets, pd.Series) else total_assets
+            else:
+                data[year] = None
+        
+        return data
+    except Exception as e:
+        return {"Ticker": ticker, "Error": str(e)}
+
+# Fetch Total Assets for all tickers
+results = []
+for ticker in tickers:
+    print(f"Fetching data for {ticker}...")
+    result = fetch_total_assets(ticker)
+    results.append(result)
+
+# Convert results into a DataFrame
+df = pd.DataFrame(results)
+
+# Save results to an Excel file on the desktop
+desktop_path = os.path.join(os.path.expanduser("~"), "Desktop")
+output_file = os.path.join(desktop_path, "DAX_Companies_Total_Assets_2020_2023.xlsx")
+df.to_excel(output_file, index=False)
+
+print(f"Data saved to {output_file}")
